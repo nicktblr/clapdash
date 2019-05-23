@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+{% block title %}
+Home
+{% endblock %}
+{% block content %}
+
+<div class="page-content container-fluid"></div>
+
+<div class="modal" tabindex="-1" role="dialog" id="options">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Initial Settings</h5>
+        </div>
+        <div class="modal-body">
+            <h6>Give Clapdash Permissions</h6>
+            <button type="button" class="btn btn-primary" id="auth-button">Authorize Google Account</button>
+            <div style="display: none" id="url-selector">
+                <hr>
+                <h6>Select Spreadsheet URL</h6>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Google Sheets URL" aria-label="Google Sheets URL" aria-describedby="url-button" id="url-input">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="url-button">Send</button>
+                    </div>
+                </div>
+            </div>
+            <div style="display: none" id="field-mapping">
+                <hr>
+                <h6>Map Data Columns:</h6>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="title-select">Title</label>
+                    </div>
+                    <select class="custom-select field-select" id="title-select">
+                        <option selected>Choose...</option>
+                    </select>
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="date-select">Date</label>
+                    </div>
+                    <select class="custom-select field-select" id="date-select">
+                        <option selected>Choose...</option>
+                    </select>
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="score-select">Score</label>
+                    </div>
+                    <select class="custom-select field-select" id="score-select">
+                        <option selected>Choose...</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary" id="field-button">Submit</button>                     
+            </div>  
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+    url = ""
+    
+    $(document).ready(function() {
+        $('#options').modal(options)
+    });
+
+    $('#auth-button').click(function() {
+        $.get("/gsheets/authorize", function(data){
+            if(data != "Authorized"){
+                window.open(data,'_blank');
+            }
+            $('#url-selector').show();
+        })
+    });
+
+    $('#url-button').click(function(){
+        url = $('#url-input').val()
+        console.log(url)
+        $.get('/headers/gsheets', {url: url}, function(data){
+            headers = JSON.parse(data)
+            console.log(data)
+            console.log(typeof headers)
+            console.log(JSON.stringify(headers))
+            $.each(headers, function(key, value) {
+                console.log(key + ": " + headers[key])
+                $('.field-select').append($('<option/>', { 
+                    value: key,
+                    text : headers[key] 
+                }));
+
+            });  
+            $('#field-mapping').show();   
+        })
+    });
+
+    $('#field-button').click(function(){
+        cols = []
+        $(".field-select > option:selected").map(function() {
+            cols.push($(this).val())
+        })
+
+        $.get('/data/gsheets', {url: url, cols: JSON.stringify(cols)}, function(data){
+            console.log(data)
+            $('.page-content').append(data)
+            console.log($('.movies-table'))
+            $('#movies-table').footable()
+        })
+    });
+
+
+</script>
+{% endblock %}
