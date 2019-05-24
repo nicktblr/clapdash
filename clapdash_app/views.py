@@ -6,8 +6,6 @@ from . import app
 
 from . import gsheets
 
-import omdb as omdb
-
 import requests as req
 
 import json
@@ -83,4 +81,4 @@ def get_data(data_type):
     d = { 'Date': dates, 'Title': movies, 'Score': scores }
     df = pd.DataFrame(d)
 
-    return df.to_json
+    return df.to_json(orient='records')

@@ -43,10 +43,10 @@ def get_sheets(id='1ePZlwiGKNu72ROwmPR66W0QvVUlnv0uEfy7BckS23IM', cell_range=["S
     #return flask.jsonify(**result)
 
 
-@app.route('/gsheets/authorize')
+@app.route('/gsheets/login/')
 def authorize():
     if 'credentials' in flask.session:
-        return 'Authorized'
+        return flask.Response("Authenticated.", mimetype='text/html', status=200)
 
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
@@ -65,7 +65,7 @@ def authorize():
     flask.session['state'] = state
 
     #return flask.redirect(authorization_url)
-    return authorization_url
+    return flask.Response(authorization_url, mimetype='text/html', status=401)
 
 
 @app.route('/gsheets/oauth2callback')
@@ -89,6 +89,13 @@ def oauth2callback():
     return "Close this window."
 
     #return flask.redirect(flask.url_for('get_sheets'))
+
+
+@app.route('/gsheets/login/validate')
+def validLogin():
+    if 'credentials' in flask.session:
+        return flask.Response("Authenticated.", mimetype='text/html', status=200)
+    return flask.Response("Not Authenticated.", mimetype='text/html', status=401)
 
 
 def credentials_to_dict(credentials):

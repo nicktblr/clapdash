@@ -6,75 +6,94 @@ Home
 
 <div class="page-content container-fluid"></div>
 
-<div class="modal" tabindex="-1" role="dialog" id="options">
+
+<div class="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" id="options">
     <div class="modal-dialog modal-xl" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Initial Settings</h5>
-        </div>
-        <div class="modal-body">
-            <h6>Give Clapdash Permissions</h6>
-            <button type="button" class="btn btn-primary" id="auth-button">Authorize Google Account</button>
-            <div style="display: none" id="url-selector">
-                <hr>
-                <h6>Select Spreadsheet URL</h6>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="Google Sheets URL" aria-label="Google Sheets URL" aria-describedby="url-button" id="url-input">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button" id="url-button">Send</button>
-                    </div>
-                </div>
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title">Initial Settings</h5>
             </div>
-            <div style="display: none" id="field-mapping">
-                <hr>
-                <h6>Map Data Columns:</h6>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <label class="input-group-text" for="title-select">Title</label>
+            <div class="modal-body">
+                <h6>Give Clapdash Permissions</h6>
+                <button type="button" class="btn btn-primary" id="auth-button">Authorize Google Account</button>
+                <div style="display: none" id="url-selector">
+                    <hr>
+                    <h6>Select Spreadsheet URL</h6>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Google Sheets URL" aria-label="Google Sheets URL" aria-describedby="url-button" id="url-input">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="url-button">Send</button>
+                        </div>
                     </div>
-                    <select class="custom-select field-select" id="title-select">
-                        <option selected>Choose...</option>
-                    </select>
                 </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <label class="input-group-text" for="date-select">Date</label>
+                <div style="display: none" id="field-mapping">
+                    <hr>
+                    <h6>Map Data Columns:</h6>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <label class="input-group-text" for="title-select">Title</label>
+                        </div>
+                        <select class="custom-select field-select" id="title-select">
+                            <option selected>Choose...</option>
+                        </select>
                     </div>
-                    <select class="custom-select field-select" id="date-select">
-                        <option selected>Choose...</option>
-                    </select>
-                </div>
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <label class="input-group-text" for="score-select">Score</label>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <label class="input-group-text" for="date-select">Date</label>
+                        </div>
+                        <select class="custom-select field-select" id="date-select">
+                            <option selected>Choose...</option>
+                        </select>
                     </div>
-                    <select class="custom-select field-select" id="score-select">
-                        <option selected>Choose...</option>
-                    </select>
-                </div>
-                <button type="button" class="btn btn-primary" id="field-button">Submit</button>                     
-            </div>  
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <label class="input-group-text" for="score-select">Score</label>
+                        </div>
+                        <select class="custom-select field-select" id="score-select">
+                            <option selected>Choose...</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="field-button">Submit</button>                     
+                </div>  
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
+
 
 {% endblock %}
 {% block scripts %}
 <script type="text/javascript">
     url = ""
+    var googAuth;
     
     $(document).ready(function() {
-        $('#options').modal(options)
+        $('#options').modal({})
     });
 
     $('#auth-button').click(function() {
-        $.get("/gsheets/authorize", function(data){
-            if(data != "Authorized"){
-                window.open(data,'_blank');
-            }
-            $('#url-selector').show();
+        $.get("/gsheets/login/", function(){
         })
+        .fail(function(xhr, status, error){
+            if (xhr.status == 401){
+                googAuth = window.open(xhr.responseText,'_blank');
+            }
+        })
+        
+        var validateLogin = function(){
+            $.get("/gsheets/login/validate", function(data, textStatus, xhr){
+                if (typeof googAuth !== 'undefined'){
+                    googAuth.close();
+                }
+                $('#auth-button').prop('disabled', true);
+                $('#url-selector').show();
+            })
+            .fail(function(xhr, status, error){
+                setTimeout(validateLogin, 1000)
+            })
+        };
+
+        validateLogin()
     });
 
     $('#url-button').click(function(){
@@ -105,12 +124,9 @@ Home
 
         $.get('/data/gsheets', {url: url, cols: JSON.stringify(cols)}, function(data){
             console.log(data)
-            $('.page-content').append(data)
-            console.log($('.movies-table'))
-            $('#movies-table').footable()
         })
+
+        $('#options').modal('hide')
     });
-
-
 </script>
 {% endblock %}
