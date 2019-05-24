@@ -60,7 +60,6 @@ def get_headers(data_type):
 
 @app.route("/data/<data_type>")
 def get_data(data_type):
-    print(data_type)
     if data_type is not 'gsheets':
         url = request.args.get('url')
         cols = json.loads(request.args.get('cols'))     # Convert json array string to list
@@ -68,17 +67,25 @@ def get_data(data_type):
         
         sheet_name = 'Sheet1!'
         cell_ranges = [sheet_name + col + ':' + col for col in cols]
-        print(cell_ranges)
 
         result = gsheets.get_sheets(id, cell_ranges)
+
         print(result)
 
         ## TODO: slice based on headers or no headers
-        movies = result['valueRanges'][0]['values'][1::]
-        dates = result['valueRanges'][1]['values'][1::]
-        scores = result['valueRanges'][2]['values'][1::]
+        # Get list of lists from result
+        movies_lol = result['valueRanges'][0]['values'][1::]
+        dates_lol = result['valueRanges'][1]['values'][1::]
+        scores_lol = result['valueRanges'][2]['values'][1::]
+
+        # Rip strings from lists
+        movies = [j for i in movies_lol for j in i]
+        dates = [j for i in dates_lol for j in i]
+        scores = [j for i in scores_lol for j in i]
+
 
     d = { 'Date': dates, 'Title': movies, 'Score': scores }
     df = pd.DataFrame(d)
+    print(df)
 
     return df.to_json(orient='records')
