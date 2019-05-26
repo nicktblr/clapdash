@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 
-from . import app
+from . import app, r
 
 from . import gsheets
 
@@ -60,11 +60,11 @@ def get_headers(data_type):
 
 @app.route("/data/<data_type>")
 def get_data(data_type):
-    if data_type is not 'gsheets':
+    if data_type == 'gsheets':
         url = request.args.get('url')
         cols = json.loads(request.args.get('cols'))     # Convert json array string to list
         id = gsheets.extract_id(url)
-        
+
         sheet_name = 'Sheet1!'
         cell_ranges = [sheet_name + col + ':' + col for col in cols]
 
@@ -83,9 +83,30 @@ def get_data(data_type):
         dates = [j for i in dates_lol for j in i]
         scores = [j for i in scores_lol for j in i]
 
+    key = data_type + '_' + id
+    session['movies_key'] = key
+    print(key)
 
     d = { 'Date': dates, 'Title': movies, 'Score': scores }
-    df = pd.DataFrame(d)
-    print(df)
+    movie_list = pd.DataFrame(d)
+    print(movie_list)
 
-    return df.to_json(orient='records')
+    set_movies(key, movie_list.to_msgpack())
+
+    return movie_list.to_json(orient='records')
+
+
+def set_movies(key, movie_list):
+    r.set(key, movie_list)
+    print(r.get(key))
+
+@app.route('/movies/')
+def get_movies():
+    key = session['movies_key']
+    movies_msgpack = r.get(key)
+    movies = pd.read_msgpack(movies_msgpack)
+
+    print(movies)
+
+    return movies.to_json(orient='records')
+    
