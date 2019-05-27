@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, session
 
 from . import app, r
 
-from . import gsheets
+from . import gsheets, tmdb
 
 import requests as req
 
@@ -85,13 +85,20 @@ def get_data(data_type):
 
     key = data_type + '_' + id
     session['movies_key'] = key
-    print(key)
+    #print(key)
 
     d = { 'Date': dates, 'Title': movies, 'Score': scores }
     movie_list = pd.DataFrame(d)
-    print(movie_list)
+    print(movie_list.dtypes)
+
+    movie_list['Date'] = movie_list['Date'].astype('datetime64')
+    movie_list['Score'] = movie_list['Score'].astype('int64')
+
+    print(movie_list.dtypes)
 
     set_movies(key, movie_list.to_msgpack())
+
+    tmdb.display_results(movies)
 
     return movie_list.to_json(orient='records')
 
@@ -107,6 +114,7 @@ def get_movies():
     movies = pd.read_msgpack(movies_msgpack)
 
     print(movies)
+    print(movies.dtypes)
 
     return movies.to_json(orient='records')
     
