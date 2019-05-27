@@ -66,6 +66,8 @@ Home
 <script type="text/javascript">
     url = ""
     var googAuth;
+    movieData = []
+    searchCounter = 0
     
     $(document).ready(function() {
         $('#options').modal({})
@@ -121,9 +123,22 @@ Home
         $(".field-select > option:selected").map(function() {
             cols.push($(this).val())
         })
-
+        
         $.get('/data/gsheets', {url: url, cols: JSON.stringify(cols)}, function(data){
-            console.log(data)
+            // Flask can't do asynchronous requests, using the JS event loop to do concurrent API calls [Replace Flask]
+            names = JSON.parse(data)
+            $.each(names, function(key, value) {
+                console.log(key + ": " + names[key])
+                searchCounter++
+                $.get('/tmdb/search', {name: names[key]}, function(row){
+                    console.log(row)
+                    movieData.push(row)
+                    searchCounter--
+                    if (searchCounter == 0){
+                        $.post('/movies/', {data: JSON.stringify(movieData)})
+                    }
+                })
+            })
         })
 
         $('#options').modal('hide')

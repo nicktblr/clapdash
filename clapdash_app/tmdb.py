@@ -10,24 +10,36 @@ import pandas as pd
 
 tmdb.API_KEY = tmdb_key
 
-def search_tmdb(query):
+@app.route('/tmdb/search/')
+def search_tmdb():
+    ## Could cache name/id pairs to reduce processing time by ~1/2
+    ## Could also just store name/data pairs to reduce processing by more
+    query = flask.request.args.get('name')
+    
     search = tmdb.Search()
     response = search.movie(query=query)
     
-    raw_movies = search.results
     movies = search.results
     
     #movies.sort(key=extract_popularity, reverse=True)
 
     s = movies[0]
+
     movie = tmdb.Movies(s['id'])
 
-    return movie.info()
+    r = movie.info()
+    
+    movie_vm = {'name': query,
+        'Title': r["title"],
+        'Release Date': r["release_date"],
+        'Runtime': r["runtime"],
+        'Original Language': r["original_language"],
+        'Production Country': r["production_countries"][0]["name"],
+        'Poster': r["poster_path"],
+        'TMDB Score': r["vote_average"]
+    }
 
-def display_results(movie_names):
-    ext_data = pd.DataFrame(columns=['name', 'Title', 'Release Date', 'Runtime', 'Original Language', 'Production Country', 'Poster', 'TMDB Score'])
-    for name in movie_names:
-        n = search_tmdb(name)
+    return json.dumps(movie_vm)
 
 
 def extract_popularity(json):

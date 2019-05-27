@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, Response
 
 from . import app, r
 
@@ -87,7 +87,7 @@ def get_data(data_type):
     session['movies_key'] = key
     #print(key)
 
-    d = { 'Date': dates, 'Title': movies, 'Score': scores }
+    d = { 'Date': dates, 'name': movies, 'Score': scores }
     movie_list = pd.DataFrame(d)
     print(movie_list.dtypes)
 
@@ -98,23 +98,49 @@ def get_data(data_type):
 
     set_movies(key, movie_list.to_msgpack())
 
-    tmdb.display_results(movies)
-
-    return movie_list.to_json(orient='records')
+    print(movies)
+    #return movie_list.to_json(orient='records')
+    return json.dumps(movies)
 
 
 def set_movies(key, movie_list):
     r.set(key, movie_list)
     print(r.get(key))
 
-@app.route('/movies/')
+
+def tmdb_viewmodel(movie_list):
+    #tmdb_data = pd.DataFrame(columns=['name', 'Title', 'Release Date', 'Runtime', 'Original Language', 'Production Country', 'Poster', 'TMDB Score'])
+    tmdb_data = pd.DataFrame(movie_list)
+    # for d in movie_list:
+    #     for i in range(len(movie_list)):
+    #         tmdb_data.loc[i] = movie_list[i]
+    
+    print(tmdb_data)
+
+    return tmdb_data
+
+
+@app.route('/movies/', methods=['POST'])
+def join_movies():
+
+    tmdb_data = json.loads(request.form['data'])
+
+    for i in range(len(tmdb_data)):
+        tmdb_data[i] = json.loads(tmdb_data[i])
+
+    movies = get_movies()
+    tmdb_model = tmdb_viewmodel(tmdb_data)
+    print(tmdb_model)
+    
+    result = movies.join(tmdb_model, lsuffix='name', rsuffix='name')
+    print(result)
+    return Response("Data Joined.", mimetype='text/html', status=200)
+
+
 def get_movies():
     key = session['movies_key']
     movies_msgpack = r.get(key)
     movies = pd.read_msgpack(movies_msgpack)
 
-    print(movies)
-    print(movies.dtypes)
-
-    return movies.to_json(orient='records')
+    return movies
     

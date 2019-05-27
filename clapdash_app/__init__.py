@@ -1,6 +1,7 @@
 import flask
 import os
 import redis
+
 app = flask.Flask(__name__)
 app.secret_key = os.environ['FLASK_KEY']
 
