@@ -1,16 +1,11 @@
+import json
 from datetime import datetime
 
-from flask import Flask, render_template, request, session, Response
-
-from . import app, r
-
-from . import gsheets, tmdb
-
-import requests as req
-
-import json
-
 import pandas as pd
+import requests as req
+from flask import Flask, Response, render_template, request, session
+
+from . import app, gsheets, r, tmdb
 
 
 @app.route("/")
@@ -133,4 +128,3 @@ def get_movies():
     movies = pd.read_msgpack(movies_msgpack)
 
     return movies
-    

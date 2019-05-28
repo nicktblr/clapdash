@@ -103,9 +103,7 @@ Home
         console.log(url)
         $.get('/headers/gsheets', {url: url}, function(data){
             headers = JSON.parse(data)
-            console.log(data)
-            console.log(typeof headers)
-            console.log(JSON.stringify(headers))
+            
             $.each(headers, function(key, value) {
                 console.log(key + ": " + headers[key])
                 $('.field-select').append($('<option/>', { 
@@ -126,6 +124,7 @@ Home
         
         $.get('/data/gsheets', {url: url, cols: JSON.stringify(cols)}, function(data){
             // Flask can't do asynchronous requests, using the JS event loop to do concurrent API calls [Replace Flask]
+            // TMDB API is slow, roughly ~0.7s/request
             names = JSON.parse(data)
             $.each(names, function(key, value) {
                 console.log(key + ": " + names[key])

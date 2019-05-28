@@ -1,27 +1,22 @@
-import flask
-
 import json
 
+import flask
+import pandas as pd
 import tmdbsimple as tmdb
 
 from . import app, tmdb_key
-
-import pandas as pd
 
 tmdb.API_KEY = tmdb_key
 
 @app.route('/tmdb/search/')
 def search_tmdb():
-    ## Could cache name/id pairs to reduce processing time by ~1/2
-    ## Could also just store name/data pairs to reduce processing by more
+
     query = flask.request.args.get('name')
     
     search = tmdb.Search()
     response = search.movie(query=query)
     
     movies = search.results
-    
-    #movies.sort(key=extract_popularity, reverse=True)
 
     s = movies[0]
 
@@ -40,10 +35,3 @@ def search_tmdb():
     }
 
     return json.dumps(movie_vm)
-
-
-def extract_popularity(json):
-    try:
-        return float(json['popularity'])
-    except KeyError:
-        return 0
