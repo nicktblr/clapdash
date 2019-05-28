@@ -85,38 +85,26 @@ def get_data(data_type):
 
     key = data_type + '_' + id
     session['movies_key'] = key
-    #print(key)
 
     d = { 'Date': dates, 'name': movies, 'Score': scores }
     movie_list = pd.DataFrame(d)
-    print(movie_list.dtypes)
 
     movie_list['Date'] = movie_list['Date'].astype('datetime64')
     movie_list['Score'] = movie_list['Score'].astype('int64')
 
-    print(movie_list.dtypes)
+    movie_list = movie_list[::-1]
 
     set_movies(key, movie_list.to_msgpack())
 
-    print(movies)
-    #return movie_list.to_json(orient='records')
     return json.dumps(movies)
 
 
 def set_movies(key, movie_list):
     r.set(key, movie_list)
-    print(r.get(key))
 
 
 def tmdb_viewmodel(movie_list):
-    #tmdb_data = pd.DataFrame(columns=['name', 'Title', 'Release Date', 'Runtime', 'Original Language', 'Production Country', 'Poster', 'TMDB Score'])
     tmdb_data = pd.DataFrame(movie_list)
-    # for d in movie_list:
-    #     for i in range(len(movie_list)):
-    #         tmdb_data.loc[i] = movie_list[i]
-    
-    print(tmdb_data)
-
     return tmdb_data
 
 
@@ -130,10 +118,12 @@ def join_movies():
 
     movies = get_movies()
     tmdb_model = tmdb_viewmodel(tmdb_data)
-    print(tmdb_model)
     
-    result = movies.join(tmdb_model, lsuffix='name', rsuffix='name')
-    print(result)
+    joined_movies = pd.merge(movies, tmdb_model, on='name', how='left')
+    
+    key = session['movies_key']
+    set_movies(key, joined_movies.to_msgpack())
+
     return Response("Data Joined.", mimetype='text/html', status=200)
 
 
