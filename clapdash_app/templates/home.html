@@ -4,7 +4,10 @@ Home
 {% endblock %}
 {% block content %}
 
-<div class="page-content container-fluid">
+<div class="page-content container">
+    <div id="card-container">
+
+    </div>
     <i class="fas fa-chevron-down" id="next-page"></i>
 </div>
 
@@ -133,7 +136,10 @@ Home
         $('#options').modal('hide')
     });
 
-    $('#next-page').click(fetchNextPage)
+    $('#next-page').click(function(){
+        movies = fetchNextPage()
+
+    })
 
     function fetchNextPage() 
     {
@@ -151,12 +157,10 @@ Home
             // Flask can't do asynchronous requests, using the JS event loop to do concurrent API calls [Replace Flask]
             // TMDB API is slow, roughly ~0.7s/request
             names = JSON.parse(data)
-            console.log(names)
             $.each(names, function(key, value) {
                 searchCounter++
                 $.get('/tmdb/search', {name: names[key]['name']})
                 .done(function(row){
-                    console.log(row)
                     movieQueue.push(row)
                 })
                 .always(function(){
@@ -164,8 +168,8 @@ Home
                     if (searchCounter == 0){
                         setTimeout($('#next-page').on('click', fetchNextPage), 10000)
                         $.post('/movies/', {data: JSON.stringify(movieQueue)}, function(){
-                            $.get('/movies/', { page: page }, function(data){
-                                console.log(JSON.parse(data))
+                            $.get('/movies/render', { page: page }, function(cards){
+                                $('#card-container').append(cards)
                             })
                             console.log(movieQueue)
                             movieQueue = []

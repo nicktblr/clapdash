@@ -116,8 +116,6 @@ def movies():
 
         #joined_movies = pd.merge(movies, tmdb_model, on='name', how='left')
 
-        print(movies)
-
         key = session['movies_key']
         set_movies(key, movies.to_msgpack())
 
@@ -125,8 +123,19 @@ def movies():
     
     page = int(request.args.get('page'))
     movies = get_movies(page)
+    
     return movies.to_json(orient='records')
 
+
+@app.route('/movies/render/')
+def render_movies():
+    page = int(request.args.get('page'))
+    movies = get_movies(page)
+
+    movies['month_watched'] = movies['Date'].map(lambda x: x.strftime('%B %Y'))
+
+    list_of_movies = movies.to_dict(orient='records')
+    return render_template('_cards.html', movies=list_of_movies)
 
 
 def get_movies(page=-1):
