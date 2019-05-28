@@ -16,14 +16,12 @@ def home():
     return render_template("home.html")
 
 
-@app.route("/headers/<data_type>")
+@app.route("/import/headers/<data_type>")
 def get_headers(data_type):
-    print(data_type)
     ## TODO: is not?? fix this
     if data_type is not 'gsheets':
         ## TODO: Store URL in session
         url = request.args.get('url')
-        print(url)
         id = gsheets.extract_id(url)
 
         
@@ -31,8 +29,6 @@ def get_headers(data_type):
         cell_ranges = 'Sheet1!1:1'
         result = gsheets.get_sheets(id, cell_ranges)
         
-        print(result)
-
         values = result['valueRanges'][0]['values'][0]
 
     ## TODO: Add process to allow data with no headers
@@ -45,15 +41,13 @@ def get_headers(data_type):
     for letter in range(ASCII_A, ASCII_A + len(values)):
         alp_keys.append(chr(letter))
     
-    print(alp_keys)
-    print(values)
 
     sheet_headers = dict(zip(alp_keys, values))
 
     return json.dumps(sheet_headers)
 
 
-@app.route("/data/<data_type>")
+@app.route("/import/data/<data_type>")
 def get_data(data_type):
     if data_type == 'gsheets':
         url = request.args.get('url')
@@ -64,8 +58,6 @@ def get_data(data_type):
         cell_ranges = [sheet_name + col + ':' + col for col in cols]
 
         result = gsheets.get_sheets(id, cell_ranges)
-
-        print(result)
 
         ## TODO: slice based on headers or no headers
         # Get list of lists from result
@@ -91,40 +83,62 @@ def get_data(data_type):
 
     set_movies(key, movie_list.to_msgpack())
 
-    return json.dumps(movies)
+    return Response(str(len(movies)), mimetype='text/html', status=200)
 
 
 def set_movies(key, movie_list):
     r.set(key, movie_list)
-
 
 def tmdb_viewmodel(movie_list):
     tmdb_data = pd.DataFrame(movie_list)
     return tmdb_data
 
 
-@app.route('/movies/', methods=['POST'])
-def join_movies():
+@app.route('/movies/', methods=['GET','POST'])
+def movies():
+    if request.method == 'POST':
+        tmdb_data = json.loads(request.form['data'])
 
-    tmdb_data = json.loads(request.form['data'])
+        for i in range(len(tmdb_data)):
+            tmdb_data[i] = json.loads(tmdb_data[i])
+            
+        movies = get_movies(-1)
+        movies = movies.set_index(['name'], drop=False)
+        movies.index.name = None
+        tmdb_model = tmdb_viewmodel(tmdb_data)
+        tmdb_model = tmdb_model.set_index(['name'], drop=False)
+        tmdb_model.index.name = None
 
-    for i in range(len(tmdb_data)):
-        tmdb_data[i] = json.loads(tmdb_data[i])
+        if movies.shape[1] == 3:
+            movies = pd.merge(movies, tmdb_model, on='name', how='left')
+        else:
+           movies.update(tmdb_model, overwrite=False)
 
-    movies = get_movies()
-    tmdb_model = tmdb_viewmodel(tmdb_data)
+        #joined_movies = pd.merge(movies, tmdb_model, on='name', how='left')
+
+        print(movies)
+
+        key = session['movies_key']
+        set_movies(key, movies.to_msgpack())
+
+        return Response("Data Joined.", mimetype='text/html', status=200)
     
-    joined_movies = pd.merge(movies, tmdb_model, on='name', how='left')
-    
-    key = session['movies_key']
-    set_movies(key, joined_movies.to_msgpack())
-
-    return Response("Data Joined.", mimetype='text/html', status=200)
+    page = int(request.args.get('page'))
+    movies = get_movies(page)
+    return movies.to_json(orient='records')
 
 
-def get_movies():
+
+def get_movies(page=-1):
+    MAX_RECORDS = 20
+
     key = session['movies_key']
     movies_msgpack = r.get(key)
     movies = pd.read_msgpack(movies_msgpack)
+
+    if page != -1:
+        if len(movies) < page*MAX_RECORDS:
+            return movies.iloc[(page-1)*MAX_RECORDS::]
+        return movies.iloc[(page-1)*MAX_RECORDS:(page)*MAX_RECORDS]
 
     return movies

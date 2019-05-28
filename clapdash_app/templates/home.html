@@ -4,8 +4,9 @@ Home
 {% endblock %}
 {% block content %}
 
-<div class="page-content container-fluid"></div>
-
+<div class="page-content container-fluid">
+    <i class="fas fa-chevron-down" id="next-page"></i>
+</div>
 
 <div class="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" id="options">
     <div class="modal-dialog modal-xl" role="document">
@@ -66,8 +67,10 @@ Home
 <script type="text/javascript">
     url = ""
     var googAuth;
-    movieData = []
-    searchCounter = 0
+    movieQueue = []
+    cols = []
+    page = 1
+    totalPages = 1000;
     
     $(document).ready(function() {
         $('#options').modal({})
@@ -101,7 +104,7 @@ Home
     $('#url-button').click(function(){
         url = $('#url-input').val()
         console.log(url)
-        $.get('/headers/gsheets', {url: url}, function(data){
+        $.get('/import/headers/gsheets', {url: url}, function(data){
             headers = JSON.parse(data)
             
             $.each(headers, function(key, value) {
@@ -122,25 +125,56 @@ Home
             cols.push($(this).val())
         })
         
-        $.get('/data/gsheets', {url: url, cols: JSON.stringify(cols)}, function(data){
-            // Flask can't do asynchronous requests, using the JS event loop to do concurrent API calls [Replace Flask]
-            // TMDB API is slow, roughly ~0.7s/request
-            names = JSON.parse(data)
-            $.each(names, function(key, value) {
-                console.log(key + ": " + names[key])
-                searchCounter++
-                $.get('/tmdb/search', {name: names[key]}, function(row){
-                    console.log(row)
-                    movieData.push(row)
-                    searchCounter--
-                    if (searchCounter == 0){
-                        $.post('/movies/', {data: JSON.stringify(movieData)})
-                    }
-                })
-            })
+        $.get('/import/data/gsheets', {url: url, cols: JSON.stringify(cols)}, function(data){
+            totalPages = Math.ceil(data / 20)
+            fetchNextPage()
         })
 
         $('#options').modal('hide')
     });
+
+    $('#next-page').click(fetchNextPage)
+
+    function fetchNextPage() 
+    {
+        /* 
+        Process : GET data from google sheets -> Concurrently GET details for each movie [Using counter to track finish]
+                    -> POST all movie data at once -> Clear movie queue
+        */
+        $('#next-page').off('click')
+        
+        if (page > totalPages){ console.log('ENDOFFILE'); return; }
+
+        searchCounter = 0
+
+        $.get('/movies/', {page: page}, function(data){
+            // Flask can't do asynchronous requests, using the JS event loop to do concurrent API calls [Replace Flask]
+            // TMDB API is slow, roughly ~0.7s/request
+            names = JSON.parse(data)
+            console.log(names)
+            $.each(names, function(key, value) {
+                searchCounter++
+                $.get('/tmdb/search', {name: names[key]['name']})
+                .done(function(row){
+                    console.log(row)
+                    movieQueue.push(row)
+                })
+                .always(function(){
+                    searchCounter--
+                    if (searchCounter == 0){
+                        setTimeout($('#next-page').on('click', fetchNextPage), 10000)
+                        $.post('/movies/', {data: JSON.stringify(movieQueue)}, function(){
+                            $.get('/movies/', { page: page }, function(data){
+                                console.log(JSON.parse(data))
+                            })
+                            console.log(movieQueue)
+                            movieQueue = []
+                            page = page + 1
+                        })
+                    }
+                })
+            })
+        })
+    }
 </script>
 {% endblock %}
