@@ -170,6 +170,17 @@ Home
                         $.post('/movies/', {data: JSON.stringify(movieQueue)}, function(){
                             $.get('/movies/render', { page: page }, function(cards){
                                 $('#card-container').append(cards)
+                                $('.card').on("click", function(e) {
+                                    name_id = $(this).closest('.card').attr('id')
+                                    console.log(name_id)
+                                    name = name_id.replace('_', ' ')
+                                    console.log(name)
+                                    $.get('/movies/render-modal', { name: name }, function(modal){
+                                        console.log(modal)
+                                        $('.body-content').append(modal)
+                                        $('#modal-'+name_id).modal({})
+                                    })
+                                })
                             })
                             console.log(movieQueue)
                             movieQueue = []

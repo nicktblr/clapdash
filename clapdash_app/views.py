@@ -138,6 +138,24 @@ def render_movies():
     return render_template('_cards.html', movies=list_of_movies)
 
 
+@app.route('/movies/render-modal')
+def render_modal():
+    query_name = request.args.get('name')
+    movies = get_movies(-1)
+    print(movies)
+
+    movie = movies.loc[movies['name'] == query_name]
+
+    print(movie)
+
+    movie = movie.to_dict(orient='records')
+
+    print(movie)
+    print(movie[0])
+
+    return render_template('_movie_modal.html', movie=movie[0])
+
+
 def get_movies(page=-1):
     MAX_RECORDS = 20
 

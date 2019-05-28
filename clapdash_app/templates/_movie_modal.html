@@ -1,0 +1,24 @@
+<div class="modal fade" id={{ "modal-" ~ movie.name|replace(' ', '_') }} tabindex="-1" role="dialog" aria-labelledby={{ "title-" ~ movie.name|replace(' ', '_') }} aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id={{ "title-" ~ movie.name|replace(' ', '_') }}>{{ movie.Title }}</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                        <div class="row">
+                            <div class="col-sm">
+                                <img class="card-img-top" src={{ "https://image.tmdb.org/t/p/w500" ~ movie.Poster }} alt="Card image cap">
+                            </div>
+                            <div class="col-sm">
+                                <p>{{ movie['Release Date'] }}</p>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
