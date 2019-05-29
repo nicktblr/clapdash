@@ -2,3 +2,7 @@ clapdash_app/credentials.json
 __pycache__
 .vscode/
 env/
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

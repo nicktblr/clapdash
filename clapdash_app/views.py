@@ -16,9 +16,7 @@ def home():
 @app.route("/import/headers/<data_type>")
 def get_headers(data_type):
     
-    ## TODO: is not?? fix this
-    if data_type is not 'gsheets':
-        ## TODO: Store URL in session
+    if data_type == 'gsheets':
         url = request.args.get('url')
         id = gsheets.extract_id(url)
 
