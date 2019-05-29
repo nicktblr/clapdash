@@ -3,13 +3,13 @@
 <h1>{{ watched_in_month.grouper }}</h1>
 <div class="card-deck">
 {% for movie in watched_in_month.list %}
-    <div id={{ movie.name|replace(' ', '_') }} class="card mb-4">
+    <div id="{{ movie.name|e|replace(' ', '_') }}" class="card mb-4">
         <img class="card-img-top" src={{ "https://image.tmdb.org/t/p/w500" ~ movie.Poster }} alt="No Poster">
-        <div class="card-body">
+        <!-- <div class="card-body">
             <h5 class="card-title">{{ movie.Title }}</h5>
-        </div>
+        </div> -->
         <div class="card-footer">
-            <small class="text-muted">{{ movie.Date }}</small>
+            <small class="text-muted">{{ movie.date_watched ~ ' // ' ~ movie.Score }}</small>
         </div>
     </div>
     {% if loop.index is divisibleby 2 %}

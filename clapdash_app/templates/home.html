@@ -119,18 +119,16 @@ Home
                             $.get('/movies/render', { page: page }, function(cards){
                                 $('#card-container').append(cards)
                                 $('.card').on("click", function(e) {
-                                    name_id = $(this).closest('.card').attr('id')
-                                    console.log(name_id)
-                                    name = name_id.replace('_', ' ')
-                                    console.log(name)
-                                    $.get('/movies/render-modal', { name: name }, function(modal){
-                                        console.log(modal)
+                                    nameId = $(this).closest('.card').attr('id')
+                                    name = nameId.replace(/_/g, ' ')
+                                    $.get('/movies/render-modal', { name: JSON.stringify(name) }, function(modal){
                                         $('.body-content').append(modal)
-                                        $('#modal-'+name_id).modal({})
+                                        // Escape reserved characters for jquery selectors
+                                        selector = "#modal-" + nameId.replace(/'/g,"\\'").replace(/:/g,"\\:")
+                                        $(selector).modal({})
                                     })
                                 })
                             })
-                            console.log(movieQueue)
                             movieQueue = []
                             page = page + 1
                         })

@@ -15,6 +15,7 @@ def home():
 
 @app.route("/import/headers/<data_type>")
 def get_headers(data_type):
+    
     ## TODO: is not?? fix this
     if data_type is not 'gsheets':
         ## TODO: Store URL in session
@@ -46,6 +47,7 @@ def get_headers(data_type):
 
 @app.route("/import/data/<data_type>")
 def get_data(data_type):
+
     if data_type == 'gsheets':
         url = request.args.get('url')
         cols = json.loads(request.args.get('cols'))     # Convert json array string to list
@@ -86,6 +88,7 @@ def get_data(data_type):
 def set_movies(key, movie_list):
     r.set(key, movie_list)
 
+
 def tmdb_viewmodel(movie_list):
     tmdb_data = pd.DataFrame(movie_list)
     return tmdb_data
@@ -111,8 +114,6 @@ def movies():
         else:
            movies.update(tmdb_model, overwrite=False)
 
-        #joined_movies = pd.merge(movies, tmdb_model, on='name', how='left')
-
         key = session['movies_key']
         set_movies(key, movies.to_msgpack())
 
@@ -130,6 +131,7 @@ def render_movies():
     movies = get_movies(page)
 
     movies['month_watched'] = movies['Date'].map(lambda x: x.strftime('%B %Y'))
+    movies['date_watched'] = movies['Date'].map(lambda x: x.strftime('%B %d'))
 
     list_of_movies = movies.to_dict(orient='records')
     return render_template('_cards.html', movies=list_of_movies)
@@ -137,18 +139,12 @@ def render_movies():
 
 @app.route('/movies/render-modal')
 def render_modal():
-    query_name = request.args.get('name')
+    query_name = json.loads(request.args.get('name'))
+    print(query_name)
     movies = get_movies(-1)
-    print(movies)
-
     movie = movies.loc[movies['name'] == query_name]
 
-    print(movie)
-
     movie = movie.to_dict(orient='records')
-
-    print(movie)
-    print(movie[0])
 
     return render_template('_movie_modal.html', movie=movie[0])
 
