@@ -133,8 +133,18 @@ def render_movies():
     movies['month_watched'] = movies['Date'].map(lambda x: x.strftime('%B %Y'))
     movies['date_watched'] = movies['Date'].map(lambda x: x.strftime('%B %d'))
 
-    list_of_movies = movies.to_dict(orient='records')
-    return render_template('_cards.html', movies=list_of_movies)
+    pd_by_month = []
+
+    for month, df_month in movies.groupby('month_watched', sort=False):
+        df_month['total_runtime'] = df_month['Runtime'].sum()
+        df_month['avg_score'] = df_month['Score'].mean()
+        pd_by_month.append(df_month)
+        
+    movies_by_month = [df.to_dict(orient='records') for df in pd_by_month]
+
+    #list_of_movies = movies.to_dict(orient='records')
+
+    return render_template('_cards.html', movies_by_month=movies_by_month)
 
 
 @app.route('/movies/render-modal')

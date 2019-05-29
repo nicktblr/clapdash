@@ -1,9 +1,9 @@
-{% for watched_in_month in movies|groupby('month_watched') %}
-<div>
-<h1>{{ watched_in_month.grouper }}</h1>
+{% for month in movies_by_month %}
+<h1>{{ month[0].month_watched }}</h1>
+<h5><em>Watched {{ month[0].total_runtime | int }} min. // Avg. Score {{ month[0].avg_score }}</em></h5>
 <div class="card-deck">
-{% for movie in watched_in_month.list %}
-    <div id="{{ movie.name|e|replace(' ', '_') }}" class="card mb-4">
+{% for movie in month %}
+    <div id="{{ movie.name|e|replace(' ', '_') }}" class="card mb-4 {{ 'border-success' if movie.Score >= 8 }} {{ 'border-danger' if movie.Score <= 5 }}">
         <img class="card-img-top" src={{ "https://image.tmdb.org/t/p/w500" ~ movie.Poster }} alt="No Poster">
         <!-- <div class="card-body">
             <h5 class="card-title">{{ movie.Title }}</h5>
