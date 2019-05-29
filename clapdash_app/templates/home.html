@@ -11,59 +11,7 @@ Home
     <i class="fas fa-chevron-down" id="next-page"></i>
 </div>
 
-<div class="modal" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" id="options">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-            <h5 class="modal-title">Initial Settings</h5>
-            </div>
-            <div class="modal-body">
-                <h6>Give Clapdash Permissions</h6>
-                <button type="button" class="btn btn-primary" id="auth-button">Authorize Google Account</button>
-                <div style="display: none" id="url-selector">
-                    <hr>
-                    <h6>Select Spreadsheet URL</h6>
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Google Sheets URL" aria-label="Google Sheets URL" aria-describedby="url-button" id="url-input">
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="url-button">Send</button>
-                        </div>
-                    </div>
-                </div>
-                <div style="display: none" id="field-mapping">
-                    <hr>
-                    <h6>Map Data Columns:</h6>
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <label class="input-group-text" for="title-select">Title</label>
-                        </div>
-                        <select class="custom-select field-select" id="title-select">
-                            <option selected>Choose...</option>
-                        </select>
-                    </div>
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <label class="input-group-text" for="date-select">Date</label>
-                        </div>
-                        <select class="custom-select field-select" id="date-select">
-                            <option selected>Choose...</option>
-                        </select>
-                    </div>
-                    <div class="input-group mb-3">
-                        <div class="input-group-prepend">
-                            <label class="input-group-text" for="score-select">Score</label>
-                        </div>
-                        <select class="custom-select field-select" id="score-select">
-                            <option selected>Choose...</option>
-                        </select>
-                    </div>
-                    <button type="button" class="btn btn-primary" id="field-button">Submit</button>                     
-                </div>  
-            </div>
-        </div>
-    </div>
-</div>
-
+{% include '_options_modal.html' %}
 
 {% endblock %}
 {% block scripts %}
@@ -73,7 +21,7 @@ Home
     movieQueue = []
     cols = []
     page = 1
-    totalPages = 1000;
+    totalPages = Number.MAX_SAFE_INTEGER;
     
     $(document).ready(function() {
         $('#options').modal({})

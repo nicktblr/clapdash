@@ -10,9 +10,6 @@ from . import app, gsheets, r, tmdb
 
 @app.route("/")
 def home():
-    # movies_obj = gsheets.get_sheets()
-    # movies = movies_obj['values']
-    
     return render_template("home.html")
 
 
