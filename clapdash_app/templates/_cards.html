@@ -4,7 +4,7 @@
 <div class="card-deck">
 {% for movie in month %}
     <div id="{{ movie.name|e|replace(' ', '_') }}" class="card mb-4 {{ 'border-success' if movie.Score >= 8 }} {{ 'border-danger' if movie.Score <= 5 }}">
-        <img class="card-img-top" src={{ "https://image.tmdb.org/t/p/w500" ~ movie.Poster }} alt="No Poster">
+        <img class="card-img-top" src={{ "https://image.tmdb.org/t/p/w500" ~ movie.Poster }} alt="{{ movie.name }}">
         <!-- <div class="card-body">
             <h5 class="card-title">{{ movie.Title }}</h5>
         </div> -->
