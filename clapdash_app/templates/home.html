@@ -56,6 +56,7 @@ Home
         url = $('#url-input').val()
         console.log(url)
         $.get('/import/headers/gsheets', {url: url}, function(data){
+            $('#url-form').children().prop('disabled', true);
             headers = JSON.parse(data)
             
             $.each(headers, function(key, value) {
@@ -103,11 +104,14 @@ Home
         Process : GET data from google sheets -> Concurrently GET details for each movie [Using counter to track finish]
                     -> POST all movie data at once -> Clear movie queue
         */
-        $('#next-page').off('click')
         
         if (page > totalPages){ console.log('ENDOFFILE'); return; }
 
         searchCounter = 0
+
+        var $elements = $('{% include "_loader.html" %}')
+
+        var loader = $('.page-content').append($elements);
 
         $.get('/movies/', {page: page}, function(data){
             // Flask can't do asynchronous requests, using the JS event loop to do concurrent API calls [Replace Flask]
@@ -136,6 +140,7 @@ Home
                                         $(selector).modal({})
                                     })
                                 })
+                                $elements.remove();
                             })
                             movieQueue = []
                             page = page + 1
